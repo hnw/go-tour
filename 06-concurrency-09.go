@@ -18,44 +18,44 @@ type CrawlUrl struct {
 	Depth int
 }
 
+func concurrentFetcher(cu *CrawlUrl, ch chan *CrawlUrl, fetcher Fetcher) {
+	body, urls, err := fetcher.Fetch(cu.Url)
+	if err != nil {
+		fmt.Println(err)
+		ch <- nil
+		return
+	}
+	fmt.Printf("found: %s %q\n", cu.Url, body)
+	for _, u := range urls {
+		ch <- &CrawlUrl{u, cu.Depth - 1}
+	}
+	ch <- nil
+}
+
+func cachedCrawler(ch chan *CrawlUrl, fetcher Fetcher) {
+	alreadyFetched := make(map[string]bool)
+	nFetcher := 0
+	for cu := range ch {
+		//fmt.Printf("cu=%v, nFetcher=%v\n", cu, nFetcher);
+		if cu == nil {
+			nFetcher--
+			if nFetcher <= 0 {
+				break
+			}
+		} else if cu.Depth > 0 && !alreadyFetched[cu.Url] {
+			alreadyFetched[cu.Url] = true
+			nFetcher++
+			go concurrentFetcher(cu, ch, fetcher)
+		}
+	}
+}
+
 // Crawl uses fetcher to recursively crawl
 // pages starting with url, to a maximum of depth.
 func Crawl(url string, depth int, fetcher Fetcher) {
-	urlCh := make(chan *CrawlUrl, 10)
-
-	concurrentFetcher := func(cu *CrawlUrl) {
-		body, urls, err := fetcher.Fetch(cu.Url)
-		if err != nil {
-			fmt.Println(err)
-			urlCh <- nil
-			return
-		}
-		fmt.Printf("found: %s %q\n", cu.Url, body)
-		for _, u := range urls {
-			urlCh <- &CrawlUrl{u, cu.Depth - 1}
-		}
-		urlCh <- nil
-	}
-
-	alreadyFetched := make(map[string]bool)
-	nFetcher := 0
-	cachedCrawler := func() {
-		for cu := range urlCh {
-			//fmt.Printf("cu=%v, nFetcher=%v\n", cu, nFetcher);
-			if cu == nil {
-				nFetcher--
-				if nFetcher <= 0 {
-					break
-				}
-			} else if cu.Depth > 0 && !alreadyFetched[cu.Url] {
-				alreadyFetched[cu.Url] = true
-				nFetcher++
-				go concurrentFetcher(cu)
-			}
-		}
-	}
-	urlCh <- &CrawlUrl{url, depth}
-	cachedCrawler()
+	ch := make(chan *CrawlUrl, 10)
+	ch <- &CrawlUrl{url, depth}
+	cachedCrawler(ch, fetcher)
 	return
 }
 

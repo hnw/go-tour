@@ -14,8 +14,8 @@ type Fetcher interface {
 // ch(URL) -> 重複チェック(single) -> fetcher+parser(goroutine) -> ch(URL)
 
 type CrawlUrl struct {
-    Url string
-    Depth int
+	Url   string
+	Depth int
 }
 
 // Crawl uses fetcher to recursively crawl
@@ -32,24 +32,24 @@ func Crawl(url string, depth int, fetcher Fetcher) {
 		}
 		fmt.Printf("found: %s %q\n", cu.Url, body)
 		for _, u := range urls {
-			urlCh <- &CrawlUrl{u, cu.Depth-1}
+			urlCh <- &CrawlUrl{u, cu.Depth - 1}
 		}
 		urlCh <- nil
 	}
 
 	alreadyFetched := make(map[string]bool)
-	nFetcher := 0;
+	nFetcher := 0
 	cachedCrawler := func() {
 		for cu := range urlCh {
 			//fmt.Printf("cu=%v, nFetcher=%v\n", cu, nFetcher);
 			if cu == nil {
-				nFetcher--;
+				nFetcher--
 				if nFetcher <= 0 {
 					break
 				}
 			} else if cu.Depth > 0 && !alreadyFetched[cu.Url] {
 				alreadyFetched[cu.Url] = true
-				nFetcher++;
+				nFetcher++
 				go concurrentFetcher(cu)
 			}
 		}

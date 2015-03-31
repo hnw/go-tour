@@ -1,17 +1,17 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"net/http"
-	"fmt"
 )
 
 type String string
 
 type Struct struct {
-    Greeting string
-    Punct    string
-    Who      string
+	Greeting string
+	Punct    string
+	Who      string
 }
 
 func (str String) ServeHTTP(

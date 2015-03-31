@@ -10,22 +10,22 @@ type rot13Reader struct {
 	r io.Reader
 }
 
-func rot13 (b byte) byte {
+func rot13(b byte) byte {
 	switch {
 	case b >= 'A' && b <= 'M':
-		return (b-'A'+'N')
+		return (b - 'A' + 'N')
 	case b >= 'N' && b <= 'Z':
-		return (b-'N'+'A')
+		return (b - 'N' + 'A')
 	case b >= 'a' && b <= 'm':
-		return (b-'a'+'n')
+		return (b - 'a' + 'n')
 	case b >= 'n' && b <= 'z':
-		return (b-'n'+'a')
+		return (b - 'n' + 'a')
 	default:
 		return b
 	}
 }
 
-func (rot13r *rot13Reader) Read (b []byte) (n int, err error) {
+func (rot13r *rot13Reader) Read(b []byte) (n int, err error) {
 	input := make([]byte, 1)
 	n, err = rot13r.r.Read(input)
 	if err == io.EOF {

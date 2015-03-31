@@ -1,8 +1,8 @@
 package main
 
 import (
-	"golang.org/x/tour/tree"
 	"fmt"
+	"golang.org/x/tour/tree"
 )
 
 // Walk walks the tree t sending all values
@@ -12,7 +12,7 @@ func WalkAux(t *tree.Tree, ch chan int) {
 		return
 	}
 	WalkAux(t.Left, ch)
-	ch <-t.Value
+	ch <- t.Value
 	WalkAux(t.Right, ch)
 }
 
